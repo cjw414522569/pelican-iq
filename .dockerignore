@@ -1,0 +1,15 @@
+# 依赖与构建产物（镜像内重新安装）
+node_modules
+
+# 本地数据与密钥（绝不进镜像）
+data
+.env
+Temp
+
+# 版本控制与文档
+.git
+.gitignore
+*.md
+docker-compose.yml
+Dockerfile
+.dockerignore

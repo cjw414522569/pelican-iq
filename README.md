@@ -19,6 +19,7 @@
 
 - [功能一览](#功能一览)
 - [快速开始](#快速开始)
+- [Docker 部署](#docker-部署)
 - [使用指南](#使用指南)
 - [目录结构](#目录结构)
 - [环境变量](#环境变量)
@@ -88,6 +89,49 @@ npm start
 
 ---
 
+## Docker 部署
+
+项目自带 `Dockerfile`（多阶段构建）与 `docker-compose.yml`，一条命令起服务：
+
+```bash
+# 1. 准备环境变量（容器内同样读取 .env）
+cp .env.example .env
+#    编辑 .env，至少设置 ADMIN_PASSWORD 与 SESSION_SECRET
+
+# 2. 构建并后台启动
+docker compose up -d --build
+
+# 3. 查看状态与日志
+docker compose ps
+docker compose logs -f
+```
+
+启动后访问 `http://localhost:<PORT>/`（端口跟随 `.env` 中的 `PORT`）。
+
+**编排要点：**
+
+| 项 | 说明 |
+| --- | --- |
+| 镜像 | `node:20-alpine` 两阶段构建：builder 阶段带 python3/make/g++ 兜底编译 better-sqlite3 原生模块，运行镜像不含构建工具，体积更小 |
+| 数据持久化 | SQLite 数据库挂载在宿主机 `./data` 目录，删容器不丢数据；备份直接复制该目录 |
+| 配置注入 | 通过 `env_file` 读取 `.env`（`ADMIN_PASSWORD` / `SESSION_SECRET` / `GENERATION_TIMEOUT_MS` 等），`.env` 文件本身不进镜像 |
+| 健康检查 | 每 30 秒探测 `/api/health`（容器内 wget），异常自动标记 unhealthy |
+| 日志滚动 | json-file 驱动，单文件 10MB × 最多 3 个，防止 `docker logs` 无限增长 |
+| 重启策略 | `unless-stopped`，宿主机重启后服务自动拉起 |
+
+**常用运维命令：**
+
+```bash
+docker compose up -d --build     # 改代码后重建并重启
+docker compose restart           # 仅重启
+docker compose down              # 停止并移除容器（./data 数据保留）
+docker compose pull && docker compose up -d   # 更新基础镜像
+```
+
+> 提示：`env_file` 使用了 `required: false` 语法，需要 Docker Compose v2.24+；旧版本请先创建 `.env` 再去掉 `required: false` 两行。
+
+---
+
 ## 使用指南
 
 ### 第一次跑起来
@@ -129,6 +173,8 @@ pelican-iq/
 │   ├── index.html / gallery.js / styles.css
 │   └── admin.html / admin.js
 ├── scripts/seed-demo.js   # 演示数据
+├── Dockerfile             # 多阶段构建（node:20-alpine）
+├── docker-compose.yml     # Docker 编排（数据卷 / 健康检查 / 日志滚动）
 └── data/                  # SQLite 数据库（已 gitignore）
 ```
 

@@ -1,0 +1,51 @@
+# 模型鹈鹕智商对比平台 —— Docker 编排
+#
+# 用法：
+#   cp .env.example .env   # 编辑 ADMIN_PASSWORD / SESSION_SECRET（必填）
+#   docker compose up -d --build
+#   打开 http://localhost:3000/（端口跟随 .env 中的 PORT）
+#
+# 数据持久化：SQLite 数据库挂载在 ./data，备份直接复制该目录。
+
+services:
+  pelican-iq:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pelican-iq:latest
+    container_name: pelican-iq
+    restart: unless-stopped
+
+    # 读取 .env 中的配置（ADMIN_PASSWORD / SESSION_SECRET / GENERATION_TIMEOUT_MS）
+    # 文件不存在时跳过，改用下方 environment / 默认值
+    env_file:
+      - path: .env
+        required: false
+
+    environment:
+      # compose 会自动用项目目录下 .env 中的 PORT 做变量替换
+      PORT: ${PORT:-3000}
+      NODE_ENV: production
+
+    ports:
+      # 宿主机端口跟随 .env 的 PORT，容器内同端口
+      - "${PORT:-3000}:${PORT:-3000}"
+
+    volumes:
+      # SQLite 数据库（含模型配置与 API Key）持久化到宿主机
+      - ./data:/app/data
+
+    healthcheck:
+      # $$ 转义：让 $PORT 在容器运行时展开，跟随 .env 中配置的端口
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:$${PORT:-3000}/api/health >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+    # 日志滚动，防止 docker logs 无限增长
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
