@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>模型鹈鹕智商对比平台</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="pg">
+    <header class="pg-heading">
+      <span class="logo">🐦</span>
+      <h1>鹈鹕测试</h1>
+      <span class="sub">Pelican · 模型智商对比画廊</span>
+    </header>
+    <p class="pg-status" id="gallery-status" aria-live="polite">正在加载画廊…</p>
+    <div id="gallery" class="groups"></div>
+  </main>
+
+  <!-- 详情弹层 -->
+  <dialog id="detail-dialog" class="detail-dialog">
+    <div class="detail-head">
+      <div>
+        <h2 id="detail-title" class="detail-title"></h2>
+        <div id="detail-meta" class="detail-meta"></div>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" id="detail-close">关闭</button>
+    </div>
+    <div class="detail-body">
+      <div class="detail-main">
+        <div class="detail-tabs">
+          <button type="button" class="tab-btn active" data-tab="preview">预览</button>
+          <button type="button" class="tab-btn" data-tab="source">源码</button>
+          <button type="button" class="tab-btn" data-tab="prompt">提示词</button>
+          <span class="spacer"></span>
+          <button type="button" class="btn btn-ghost btn-sm" id="detail-copy">复制源码</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="detail-download">下载</button>
+        </div>
+        <div id="detail-refs" class="banner-error" hidden></div>
+        <div class="detail-preview" id="tab-preview">
+          <iframe id="detail-frame" sandbox="allow-scripts" title="动画预览"></iframe>
+        </div>
+        <pre id="tab-source" class="raw-block tall" hidden></pre>
+        <pre id="tab-prompt" class="raw-block tall" hidden></pre>
+      </div>
+      <div class="detail-side">
+        <h3>指标</h3>
+        <dl id="detail-metrics" class="metrics"></dl>
+        <h3>人工判断 <span class="muted" id="checklist-score"></span></h3>
+        <div id="detail-checklist" class="checklist"></div>
+        <p class="muted" style="font-size:11px;margin:6px 0 0">勾选后立即保存。对照视觉基准行逐项检查。</p>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 实时生成弹层 -->
+  <dialog id="live-dialog" class="detail-dialog" style="width:min(860px,94vw)">
+    <div class="detail-head">
+      <div>
+        <h2 id="live-title" class="detail-title">实时生成</h2>
+        <div class="detail-meta"><span id="live-status" class="st st-info">⟳ 生成中</span></div>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" id="live-close">关闭</button>
+    </div>
+    <div class="live-body">
+      <div class="live-section">
+        <h3>提示词</h3>
+        <pre id="live-prompt" class="live-pre">加载中…</pre>
+      </div>
+      <div class="live-section">
+        <h3>实时输出</h3>
+        <pre id="live-content" class="live-pre"></pre>
+        <pre id="live-thinking" class="live-pre muted" hidden></pre>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="/gallery.js"></script>
+</body>
+</html>

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>控制台 · 模型鹈鹕智商对比平台</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+  <!-- 登录视图 -->
+  <div id="login-view" class="login-wrap" hidden>
+    <div class="login-card">
+      <div class="brand">
+        <span class="mark">🐦</span>
+        <div>
+          <h2>模型鹈鹕智商对比平台</h2>
+          <p class="sub">管理控制台 · 请登录</p>
+        </div>
+      </div>
+      <form id="login-form">
+        <div class="field">
+          <span class="req">管理口令</span>
+          <input type="password" id="login-password" placeholder="请输入管理口令" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn">登 录</button>
+      </form>
+      <div id="login-error" class="banner-error" hidden></div>
+    </div>
+  </div>
+
+  <!-- 控制台视图 -->
+  <div id="admin-view" class="admin-shell" hidden>
+    <!-- 侧边栏 -->
+    <aside class="aside">
+      <div class="aside-brand">
+        <span class="mark">🐦</span>
+        <div class="name">鹈鹕智商对比<small>Pelican IQ Console</small></div>
+      </div>
+      <nav class="aside-nav">
+        <a href="#models" class="active" data-nav="models"><span class="ico">▤</span>模型管理</a>
+        <a href="#create" data-nav="create"><span class="ico">＋</span>新增模型</a>
+        <a href="#prompts" data-nav="prompts"><span class="ico">✎</span>提示词</a>
+        <a href="#stats" data-nav="stats"><span class="ico">◔</span>运行概览</a>
+        <a href="#logs" data-nav="logs"><span class="ico">≡</span>生成日志</a>
+        <a href="/" target="_blank"><span class="ico">▣</span>查看画廊</a>
+      </nav>
+      <div class="aside-foot">v1.0 · SQLite</div>
+    </aside>
+
+    <!-- 主区 -->
+    <div class="admin-main-col">
+      <header class="admin-topbar">
+        <span class="crumb">控制台 / <b id="crumb-current">模型管理</b></span>
+        <span class="spacer"></span>
+        <a href="#" id="nav-logout">退出登录</a>
+      </header>
+
+      <main class="admin-content">
+        <div id="admin-banner" class="banner-error" hidden></div>
+
+        <!-- 视图：模型管理 -->
+        <div id="view-models" class="admin-view">
+        <!-- 模型管理 -->
+        <section class="panel" id="models">
+          <div class="panel-head">
+            <h2>模型管理</h2>
+            <span class="desc">每个模型对应画廊中的一行；调度器按设定间隔自动生成并推送</span>
+            <div class="actions"><button type="button" class="btn btn-sm" id="btn-goto-create">新增模型</button></div>
+          </div>
+          <div class="panel-body" style="padding:0">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>名称</th><th>协议</th><th>模型 ID</th><th>思考强度</th><th>间隔</th><th>保留</th>
+                  <th>状态</th><th>下次生成</th><th>API Key</th><th style="text-align:right">操作</th>
+                </tr>
+              </thead>
+              <tbody id="models-tbody"></tbody>
+            </table>
+          </div>
+        </section>
+        </div>
+
+        <!-- 视图：新增模型 -->
+        <div id="view-create" class="admin-view" hidden>
+        <section class="panel" id="create">
+          <div class="panel-head">
+            <h2>新增模型</h2>
+            <span class="desc">分三步：连接 → 选模型 → 保存。同名模型归为画廊中的一行（分组）</span>
+          </div>
+          <div class="panel-body">
+            <form id="model-form" novalidate>
+
+              <!-- 第 1 步：连接 -->
+              <div class="create-step">
+                <div class="create-step-head">
+                  <span class="step-num">1</span>
+                  <div>
+                    <h3>连接上游</h3>
+                    <p class="step-desc">填写服务地址与密钥，三种协议通用</p>
+                  </div>
+                </div>
+                <div class="form-grid">
+                  <label class="field"><span class="req">分组名称（画廊一行）</span>
+                    <input name="name" required placeholder="例如：GLM 系列">
+                  </label>
+                  <label class="field"><span class="req">调用协议</span>
+                    <select name="protocol" class="protocol-select">
+                      <option value="openai-chat">OpenAI Chat</option>
+                      <option value="openai-responses">OpenAI Responses</option>
+                      <option value="anthropic">Claude Messages</option>
+                    </select>
+                  </label>
+                  <label class="field span-2"><span class="req">Base URL（下拉选取历史）</span>
+                    <input name="baseUrl" required placeholder="https://api.openai.com/v1" list="base-url-list" autocomplete="off">
+                    <datalist id="base-url-list"></datalist>
+                    <span class="hint">OpenAI 兼容填到 /v1；Anthropic 填 https://api.anthropic.com。保存模型后自动记录，下次可下拉选取</span>
+                  </label>
+                  <label class="field"><span class="req">API Key</span>
+                    <input name="apiKey" type="password" placeholder="sk-…" autocomplete="new-password">
+                    <span class="hint">保存后不再回显，仅显示掩码</span>
+                  </label>
+                  <label class="field"><span>提示词</span>
+                    <select name="promptId">
+                      <option value="">默认提示词</option>
+                    </select>
+                    <span class="hint">该组模型使用的提示词，在「提示词」页管理</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- 第 2 步：选择模型 -->
+              <div class="create-step">
+                <div class="create-step-head">
+                  <span class="step-num">2</span>
+                  <div>
+                    <h3>选择模型</h3>
+                    <p class="step-desc">获取列表后勾选（可多选）；列表外也可手动添加</p>
+                  </div>
+                  <button type="button" class="btn btn-sm" data-action="fetch">获取模型列表</button>
+                </div>
+                <div class="model-picker">
+                  <div class="row">
+                    <input name="modelId" placeholder="手动输入模型 ID">
+                    <button type="button" class="btn btn-ghost btn-sm" id="add-manual">添加</button>
+                  </div>
+                  <div class="model-check-list" id="model-check-list" hidden></div>
+                  <span class="status"></span>
+                </div>
+              </div>
+
+              <!-- 第 3 步：配置与保存 -->
+              <div class="create-step">
+                <div class="create-step-head">
+                  <span class="step-num">3</span>
+                  <div>
+                    <h3>配置已选模型</h3>
+                    <p class="step-desc">每个模型可单独调整；未勾选的模型套用下方默认值</p>
+                  </div>
+                </div>
+                <div id="selected-models" class="selected-models">
+                  <p class="muted" style="font-size:12px;margin:6px 0">尚未选择模型。先在第 2 步勾选或添加。</p>
+                </div>
+                <div class="form-grid defaults-grid">
+                  <label class="field"><span>默认思考强度</span>
+                    <select name="thinkingLevel">
+                      <option value="off">关闭</option>
+                      <option value="low">低</option>
+                      <option value="medium">中</option>
+                      <option value="high">高</option>
+                      <option value="max">极高</option>
+                    </select>
+                  </label>
+                  <label class="field"><span>默认生成间隔（分钟）</span>
+                    <input name="intervalMinutes" type="number" min="1" max="10080" value="60" required>
+                  </label>
+                  <label class="field"><span>默认保留样本数（张）</span>
+                    <input name="retention" type="number" min="1" max="500" value="10" required>
+                  </label>
+                  <label class="field"><span>默认排序（小的在前）</span>
+                    <input name="sortOrder" type="number" value="0">
+                  </label>
+                  <label class="field checkbox-label"><input name="enabled" type="checkbox" checked> 启用定时生成</label>
+                </div>
+                <div class="form-footer">
+                  <button type="submit" class="btn">保存全部模型</button>
+                  <span class="muted" id="create-summary" style="font-size:12px"></span>
+                </div>
+              </div>
+
+            </form>
+          </div>
+        </section>
+        </div>
+
+        <!-- 视图：提示词管理 -->
+        <div id="view-prompts" class="admin-view" hidden>
+        <section class="panel" id="prompts">
+          <div class="panel-head">
+            <h2>提示词管理</h2>
+            <span class="desc">预置多个提示词，每个模型可选择不同的提示词进行生成</span>
+            <div class="actions"><button type="button" class="btn btn-sm" id="btn-add-prompt">新增提示词</button></div>
+          </div>
+          <div class="panel-body" id="prompts-list"></div>
+        </section>
+        </div>
+
+        <!-- 视图：运行概览 -->
+        <div id="view-stats" class="admin-view" hidden>
+        <div class="stat-cards" id="stat-cards"></div>
+        <!-- 运行概览 -->
+        <section class="panel" id="stats">
+          <div class="panel-head">
+            <h2>运行概览</h2>
+            <span class="desc">各模型样本量与平均指标</span>
+          </div>
+          <div class="panel-body" style="padding:0">
+            <table class="data-table">
+              <thead>
+                <tr><th>模型</th><th>样本</th><th>成功</th><th>失败</th><th>平均耗时</th><th>平均 Token</th></tr>
+              </thead>
+              <tbody id="stats-body"></tbody>
+            </table>
+          </div>
+        </section>
+        </div>
+
+        <!-- 视图：生成日志 -->
+        <div id="view-logs" class="admin-view" hidden>
+        <section class="panel" id="logs">
+          <div class="panel-head">
+            <h2>生成日志</h2>
+            <span class="desc">实时显示模型生成鹈鹕的提示词与内容（每 2 秒刷新，只保留最新 50 条）</span>
+            <div class="actions"><span class="st st-info" id="gen-logs-count">0 条</span></div>
+          </div>
+          <div class="panel-body" id="gen-logs-list"></div>
+        </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- 编辑弹层 -->
+  <dialog id="edit-dialog" class="detail-dialog" style="width:min(720px,94vw)">
+    <div class="detail-head">
+      <div>
+        <h2 class="detail-title">编辑模型</h2>
+        <div class="detail-meta">API Key 留空表示保留原 Key；可重新拉取模型列表</div>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" id="edit-cancel">取消</button>
+    </div>
+    <form id="edit-form" class="form-grid" style="padding:20px">
+      <input type="hidden" name="id">
+      <label class="field"><span class="req">名称</span><input name="name" required></label>
+      <label class="field"><span class="req">调用协议</span>
+        <select name="protocol" class="protocol-select">
+          <option value="openai-chat">OpenAI Chat</option>
+          <option value="openai-responses">OpenAI Responses</option>
+          <option value="anthropic">Claude Messages</option>
+        </select>
+      </label>
+      <label class="field span-2"><span class="req">Base URL</span><input name="baseUrl" required></label>
+      <label class="field"><span>API Key（留空保留原值）</span>
+        <input name="apiKey" type="password" placeholder="留空保留原 Key" autocomplete="new-password">
+        <span class="hint">留空时「获取模型列表」会自动使用已保存的 Key</span>
+      </label>
+      <label class="field"><span>提示词</span>
+        <select name="promptId">
+          <option value="">默认提示词</option>
+        </select>
+      </label>
+      <div class="field span-2 model-picker">
+        <span>模型 ID <button type="button" class="btn btn-ghost btn-sm" data-action="fetch">获取模型列表</button></span>
+        <div class="row"><input name="modelId" required></div>
+        <select class="model-select" size="1" hidden></select>
+        <span class="status"></span>
+      </div>
+      <label class="field"><span>思考强度</span>
+        <select name="thinkingLevel">
+          <option value="off">关闭</option>
+          <option value="low">低</option>
+          <option value="medium">中</option>
+          <option value="high">高</option>
+          <option value="max">极高</option>
+        </select>
+      </label>
+      <label class="field"><span class="req">生成间隔（分钟）</span><input name="intervalMinutes" type="number" min="1" max="10080" required></label>
+      <label class="field"><span class="req">保留样本数（张）</span><input name="retention" type="number" min="1" max="500" value="10" required></label>
+      <label class="field"><span>排序</span><input name="sortOrder" type="number"></label>
+      <label class="field checkbox-label"><input name="enabled" type="checkbox"> 启用定时生成</label>
+      <div class="form-footer span-2">
+        <button type="submit" class="btn">保存修改</button>
+        <button type="button" class="btn btn-ghost" id="edit-test">测试连接</button>
+        <span class="model-picker status" id="edit-test-status" style="font-size:12px"></span>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- 分组编辑弹层 -->
+  <dialog id="group-edit-dialog" class="detail-dialog" style="width:min(560px,94vw)">
+    <div class="detail-head">
+      <div>
+        <h2 class="detail-title" id="group-edit-title">编辑分组</h2>
+        <div class="detail-meta" id="group-edit-meta"></div>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" id="group-edit-cancel">取消</button>
+    </div>
+    <form id="group-edit-form" class="form-grid" style="padding:20px">
+      <input type="hidden" name="groupName">
+      <label class="field"><span>思考强度（应用到组内所有模型）</span>
+        <select name="thinkingLevel">
+          <option value="">不修改</option>
+          <option value="off">关闭</option>
+          <option value="low">低</option>
+          <option value="medium">中</option>
+          <option value="high">高</option>
+          <option value="max">极高</option>
+        </select>
+      </label>
+      <label class="field"><span>生成间隔（分钟，应用到组内所有模型）</span>
+        <input name="intervalMinutes" type="number" min="1" max="10080" placeholder="不修改">
+      </label>
+      <label class="field"><span>保留样本数（张，应用到组内所有模型）</span>
+        <input name="retention" type="number" min="1" max="500" placeholder="不修改">
+      </label>
+      <label class="field"><span>排序（小的在前）</span>
+        <input name="sortOrder" type="number" placeholder="不修改">
+      </label>
+      <label class="field checkbox-label"><input name="enabled" type="checkbox"> 启用定时生成</label>
+      <div class="form-footer span-2">
+        <button type="submit" class="btn">保存到全部模型</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- 提示词编辑弹层 -->
+  <dialog id="prompt-edit-dialog" class="detail-dialog" style="width:min(680px,94vw)">
+    <div class="detail-head">
+      <div>
+        <h2 class="detail-title" id="prompt-edit-title">新增提示词</h2>
+        <div class="detail-meta">预置提示词，供模型选择使用</div>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" id="prompt-edit-cancel">取消</button>
+    </div>
+    <form id="prompt-edit-form" class="form-grid" style="padding:20px">
+      <input type="hidden" name="id">
+      <label class="field"><span class="req">名称</span>
+        <input name="name" required placeholder="例如：鹈鹕骑自行车" maxlength="64">
+      </label>
+      <label class="field span-2"><span class="req">提示词内容</span>
+        <textarea name="content" required placeholder="输入发送给模型的提示词…" maxlength="5000" style="min-height:160px;resize:vertical"></textarea>
+      </label>
+      <label class="field checkbox-label"><input name="isDefault" type="checkbox"> 设为默认（未选择提示词的模型使用此提示词）</label>
+      <div class="form-footer span-2">
+        <button type="submit" class="btn">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/admin.js"></script>
+</body>
+</html>

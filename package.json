@@ -1,0 +1,19 @@
+{
+  "name": "pelican-iq",
+  "version": "1.0.0",
+  "private": true,
+  "description": "模型鹈鹕智商对比平台：同一道创作挑战，多模型定时生成动画并推送到画廊",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "seed": "node scripts/seed-demo.js"
+  },
+  "engines": {
+    "node": ">=20.9"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0",
+    "dotenv": "^17.0.0",
+    "express": "^4.21.2"
+  }
+}
